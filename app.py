@@ -78,18 +78,26 @@ def get_procurement_events():
 # Route for the CDSIDS table.
 # This route will handle requests to http://127.0.0.1:5000/cdsids
 @app.route('/cdsids', methods=['GET'])
-def get_cdsids():
-    """Fetches all records from the CDSIDS table."""
+def get_name_by_cdsid():
+    """Fetches the name for a given CDSID."""
+    cdsid = request.args.get('cdsid')
+    if not cdsid:
+        return jsonify({'error': 'Missing cdsid parameter'}), 400
+
     conn = get_db_connection()
     if conn is None:
         return jsonify({'error': 'Failed to connect to database'}), 500
 
-    data = conn.execute('SELECT * FROM CDSIDS').fetchall()
+    result = conn.execute('SELECT name FROM CDSIDS WHERE cdsid = ?', (cdsid,)).fetchone()
     conn.close()
-    return jsonify([dict(row) for row in data])
+
+    name = result['name'] if result else ""
+    return jsonify({'name': name})
+
 
 # --- Run the application ---
 if __name__ == '__main__':
     # The 'debug=True' option provides helpful error messages during development.
     # The host='0.0.0.0' makes the server accessible externally.
     app.run(debug=True, host='0.0.0.0')
+
