@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 import os, sqlite3
 
 # Initialize the Flask application.
@@ -23,10 +23,9 @@ def get_db_connection():
 
 # --- API Routes for Database Tables ---
 
-# Route for the Parts table.
-# This route will handle requests to http://127.0.0.1:5000/parts
+# Route to get all parts
 @app.route('/parts', methods=['GET'])
-def get_parts():
+def get_all_parts():
     """Fetches all records from the PARTS table."""
     conn = get_db_connection()
     if conn is None:
@@ -36,10 +35,27 @@ def get_parts():
     conn.close()
     return jsonify([dict(row) for row in data])
 
-# Route for the Suppliers table.
-# This route will handle requests to http://127.0.0.1:5000/suppliers
+# Route to get a specific part by part_number
+# Example: http://127.0.0.1:5000/parts/XZL-1824-A or http://127.0.0.1:5000/parts/xzl-1824-a
+@app.route('/parts/<string:part_number>', methods=['GET'])
+def get_part_by_number(part_number):
+    """Fetches a single part record by its part_number, case-insensitively."""
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({'error': 'Failed to connect to database'}), 500
+
+    # Convert part_number to uppercase for case-insensitive lookup
+    part_number_upper = part_number.upper()
+    part = conn.execute('SELECT * FROM PARTS WHERE part_number = ?', (part_number_upper,)).fetchone()
+    conn.close()
+
+    if part is None:
+        return jsonify({'error': 'Part not found'}), 404
+    return jsonify(dict(part))
+
+# Route to get all suppliers
 @app.route('/suppliers', methods=['GET'])
-def get_suppliers():
+def get_all_suppliers():
     """Fetches all records from the SUPPLIERS table."""
     conn = get_db_connection()
     if conn is None:
@@ -49,10 +65,26 @@ def get_suppliers():
     conn.close()
     return jsonify([dict(row) for row in data])
 
-# Route for the PART_SUPPLIERS table.
-# This route will handle requests to http://127.0.0.1:5000/part_suppliers
+# Route to get a specific supplier by supplier_id
+# Example: http://127.0.0.1:5000/suppliers/1
+@app.route('/suppliers/<int:supplier_id>', methods=['GET'])
+def get_supplier_by_id(supplier_id):
+    """Fetches a single supplier record by its supplier_id."""
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({'error': 'Failed to connect to database'}), 500
+
+    supplier = conn.execute('SELECT * FROM SUPPLIERS WHERE supplier_id = ?', (supplier_id,)).fetchone()
+    conn.close()
+
+    if supplier is None:
+        return jsonify({'error': 'Supplier not found'}), 404
+    return jsonify(dict(supplier))
+
+
+# Route to get all part_suppliers relationships
 @app.route('/part_suppliers', methods=['GET'])
-def get_part_suppliers():
+def get_all_part_suppliers():
     """Fetches all records from the PART_SUPPLIERS table."""
     conn = get_db_connection()
     if conn is None:
@@ -62,10 +94,34 @@ def get_part_suppliers():
     conn.close()
     return jsonify([dict(row) for row in data])
 
-# Route for the PROCUREMENT_EVENTS table.
-# This route will handle requests to http://127.0.0.1:5000/procurement_events
+# Route to get part_suppliers relationships for a specific part_number
+# Example: http://127.0.0.1:5000/part_suppliers/XZL-1824-A or http://127.0.0.1:5000/part_suppliers/xzl-1824-a
+@app.route('/part_suppliers/<string:part_number>', methods=['GET'])
+def get_part_suppliers_by_part_number(part_number):
+    """Fetches all part-supplier relationships for a given part_number, case-insensitively."""
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({'error': 'Failed to connect to database'}), 500
+
+    # Convert part_number to uppercase for case-insensitive lookup
+    part_number_upper = part_number.upper()
+    sql = """
+        SELECT PS.*, S.supplier_name, S.geographical_location, S.certifications
+        FROM PART_SUPPLIERS PS
+        JOIN SUPPLIERS S ON PS.supplier_id = S.supplier_id
+        WHERE PS.part_number = ?
+    """
+    data = conn.execute(sql, (part_number_upper,)).fetchall()
+    conn.close()
+
+    if not data:
+        return jsonify({'error': 'No supplier relationships found for this part'}), 404
+    return jsonify([dict(row) for row in data])
+
+
+# Route to get all procurement_events
 @app.route('/procurement_events', methods=['GET'])
-def get_procurement_events():
+def get_all_procurement_events():
     """Fetches all records from the PROCUREMENT_EVENTS table."""
     conn = get_db_connection()
     if conn is None:
@@ -75,31 +131,52 @@ def get_procurement_events():
     conn.close()
     return jsonify([dict(row) for row in data])
 
-# Route for the CDSIDS table.
-# This route will handle requests to http://127.0.0.1:5000/cdsids
-@app.route('/cdsids', methods=['GET'])
-def get_name_by_cdsid():
-    """Fetches the name for a given CDSID."""
-    cdsid = request.args.get('cdsid')
-    if not cdsid:
-        return jsonify({'error': 'Missing cdsid parameter'}), 400
-
+# Route to get a specific procurement_event by event_id
+# Example: http://127.0.0.1:5000/procurement_events/1
+@app.route('/procurement_events/<int:event_id>', methods=['GET'])
+def get_procurement_event_by_id(event_id):
+    """Fetches a single procurement event record by its event_id."""
     conn = get_db_connection()
     if conn is None:
         return jsonify({'error': 'Failed to connect to database'}), 500
 
-    result = conn.execute('SELECT name FROM CDSIDS WHERE UPPER(cdsid) = UPPER(?)', (cdsid,)).fetchone()
+    event = conn.execute('SELECT * FROM PROCUREMENT_EVENTS WHERE event_id = ?', (event_id,)).fetchone()
     conn.close()
 
-    name = result['name'] if result else ""
-    return jsonify({'name': name})
+    if event is None:
+        return jsonify({'error': 'Procurement event not found'}), 404
+    return jsonify(dict(event))
 
+# Route to get all cdsids
+@app.route('/cdsids', methods=['GET'])
+def get_all_cdsids():
+    """Fetches all records from the CDSIDS table."""
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({'error': 'Failed to connect to database'}), 500
+
+    data = conn.execute('SELECT * FROM CDSIDS').fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in data])
+
+# Route to get a specific cdsid by cdsid string
+# Example: http://127.0.0.1:5000/cdsids/DDHARSHA or http://127.0.0.1:5000/cdsids/ddharsha
+@app.route('/cdsids/<string:cdsid>', methods=['GET'])
+def get_cdsid_by_id(cdsid):
+    """Fetches a single CDSID record by its cdsid string, case-insensitively."""
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({'error': 'Failed to connect to database'}), 500
+
+    # Convert CDSID to uppercase for case-insensitive lookup
+    cdsid_upper = cdsid.upper()
+    data = conn.execute('SELECT * FROM CDSIDS WHERE cdsid = ?', (cdsid_upper,)).fetchone()
+    conn.close()
+
+    if data is None:
+        return jsonify({'error': 'CDSID not found'}), 404
+    return jsonify(dict(data))
 
 # --- Run the application ---
 if __name__ == '__main__':
-    # The 'debug=True' option provides helpful error messages during development.
-    # The host='0.0.0.0' makes the server accessible externally.
     app.run(debug=True, host='0.0.0.0')
-
-
-
