@@ -88,7 +88,7 @@ def get_name_by_cdsid():
     if conn is None:
         return jsonify({'error': 'Failed to connect to database'}), 500
 
-    result = conn.execute('SELECT name FROM CDSIDS WHERE cdsid = ?', (cdsid,)).fetchone()
+    result = conn.execute('SELECT name FROM CDSIDS WHERE UPPER(cdsid) = UPPER(?)', (cdsid,)).fetchone()
     conn.close()
 
     name = result['name'] if result else ""
@@ -100,5 +100,6 @@ if __name__ == '__main__':
     # The 'debug=True' option provides helpful error messages during development.
     # The host='0.0.0.0' makes the server accessible externally.
     app.run(debug=True, host='0.0.0.0')
+
 
 
