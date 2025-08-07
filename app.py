@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import os, sqlite3
 
 # Initialize the Flask application.
@@ -100,4 +100,5 @@ if __name__ == '__main__':
     # The 'debug=True' option provides helpful error messages during development.
     # The host='0.0.0.0' makes the server accessible externally.
     app.run(debug=True, host='0.0.0.0')
+
 
