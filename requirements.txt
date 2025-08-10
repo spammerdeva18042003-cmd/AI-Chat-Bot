@@ -1,4 +1,4 @@
 jsonify
 Flask==2.3.3
-request
+requests
 gunicorn==21.2.0
