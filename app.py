@@ -177,25 +177,34 @@ def get_cdsid_by_id(cdsid):
         return jsonify({'error': 'CDSID not found'}), 404
     return jsonify(dict(data))
 
-@app.route('/execute_sql', methods=['GET'])
-def execute_raw_sql_query():
+@app.route('/execute_query', methods=['GET']) # Using '/execute_query' as per your example URL
+def execute_decoded_sql_query():
     """
-    Executes a raw SQL query provided as a URL query parameter.
+    Decodes and executes a URL-encoded SQL query provided as a URL query parameter.
     Highly insecure and vulnerable to SQL Injection. Use only for local testing.
     """
-    sql_query = request.args.get('query') # Get the 'query' parameter from the URL
+    # 1. Get the encoded query string from the URL parameter
+    encoded_sql_query = request.args.get('query')
 
-    if not sql_query:
+    if not encoded_sql_query:
         return jsonify({'error': 'No SQL query provided in the "query" parameter.'}), 400
+
+    # 2. Decode the URL-encoded SQL query
+    try:
+        sql_query = unquote(encoded_sql_query)
+    except Exception as e:
+        return jsonify({'error': f'Failed to decode URL query: {e}'}), 400
 
     conn = get_db_connection()
     if conn is None:
         return jsonify({'error': 'Failed to connect to database'}), 500
 
     try:
-        # !!! DANGER: Directly executing user-provided SQL !!!
+        # 3. Execute the decoded SQL query
+        # !!! DANGER: Directly executing user-provided SQL. Reiterate security warning. !!!
         cursor = conn.execute(sql_query)
-        # For SELECT queries, fetch results
+
+        # 4. Fetch results if it's a SELECT query
         if sql_query.strip().upper().startswith('SELECT'):
             data = cursor.fetchall()
             response_data = [dict(row) for row in data]
@@ -213,4 +222,5 @@ def execute_raw_sql_query():
 # --- Run the application ---
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
 
