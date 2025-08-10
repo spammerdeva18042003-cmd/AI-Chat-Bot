@@ -24,129 +24,129 @@ def get_db_connection():
 
 # --- API Routes for Database Tables ---
 
-# Route to get all parts
-@app.route('/parts', methods=['GET'])
-def get_all_parts():
-    """Fetches all records from the PARTS table."""
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({'error': 'Failed to connect to database'}), 500
+# # Route to get all parts
+# @app.route('/parts', methods=['GET'])
+# def get_all_parts():
+#     """Fetches all records from the PARTS table."""
+#     conn = get_db_connection()
+#     if conn is None:
+#         return jsonify({'error': 'Failed to connect to database'}), 500
 
-    data = conn.execute('SELECT * FROM PARTS').fetchall()
-    conn.close()
-    return jsonify([dict(row) for row in data])
+#     data = conn.execute('SELECT * FROM PARTS').fetchall()
+#     conn.close()
+#     return jsonify([dict(row) for row in data])
 
-# Route to get a specific part by part_number
-# Example: http://127.0.0.1:5000/parts/XZL-1824-A or http://127.0.0.1:5000/parts/xzl-1824-a
-@app.route('/parts/<string:part_number>', methods=['GET'])
-def get_part_by_number(part_number):
-    """Fetches a single part record by its part_number, case-insensitively."""
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({'error': 'Failed to connect to database'}), 500
+# # Route to get a specific part by part_number
+# # Example: http://127.0.0.1:5000/parts/XZL-1824-A or http://127.0.0.1:5000/parts/xzl-1824-a
+# @app.route('/parts/<string:part_number>', methods=['GET'])
+# def get_part_by_number(part_number):
+#     """Fetches a single part record by its part_number, case-insensitively."""
+#     conn = get_db_connection()
+#     if conn is None:
+#         return jsonify({'error': 'Failed to connect to database'}), 500
 
-    # Convert part_number to uppercase for case-insensitive lookup
-    part_number_upper = part_number.upper()
-    part = conn.execute('SELECT * FROM PARTS WHERE part_number = ?', (part_number_upper,)).fetchone()
-    conn.close()
+#     # Convert part_number to uppercase for case-insensitive lookup
+#     part_number_upper = part_number.upper()
+#     part = conn.execute('SELECT * FROM PARTS WHERE part_number = ?', (part_number_upper,)).fetchone()
+#     conn.close()
 
-    if part is None:
-        return jsonify({'error': 'Part not found'}), 404
-    return jsonify(dict(part))
+#     if part is None:
+#         return jsonify({'error': 'Part not found'}), 404
+#     return jsonify(dict(part))
 
-# Route to get all suppliers
-@app.route('/suppliers', methods=['GET'])
-def get_all_suppliers():
-    """Fetches all records from the SUPPLIERS table."""
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({'error': 'Failed to connect to database'}), 500
+# # Route to get all suppliers
+# @app.route('/suppliers', methods=['GET'])
+# def get_all_suppliers():
+#     """Fetches all records from the SUPPLIERS table."""
+#     conn = get_db_connection()
+#     if conn is None:
+#         return jsonify({'error': 'Failed to connect to database'}), 500
 
-    data = conn.execute('SELECT * FROM SUPPLIERS').fetchall()
-    conn.close()
-    return jsonify([dict(row) for row in data])
+#     data = conn.execute('SELECT * FROM SUPPLIERS').fetchall()
+#     conn.close()
+#     return jsonify([dict(row) for row in data])
 
-# Route to get a specific supplier by supplier_id
-# Example: http://127.0.0.1:5000/suppliers/1
-@app.route('/suppliers/<int:supplier_id>', methods=['GET'])
-def get_supplier_by_id(supplier_id):
-    """Fetches a single supplier record by its supplier_id."""
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({'error': 'Failed to connect to database'}), 500
+# # Route to get a specific supplier by supplier_id
+# # Example: http://127.0.0.1:5000/suppliers/1
+# @app.route('/suppliers/<int:supplier_id>', methods=['GET'])
+# def get_supplier_by_id(supplier_id):
+#     """Fetches a single supplier record by its supplier_id."""
+#     conn = get_db_connection()
+#     if conn is None:
+#         return jsonify({'error': 'Failed to connect to database'}), 500
 
-    supplier = conn.execute('SELECT * FROM SUPPLIERS WHERE supplier_id = ?', (supplier_id,)).fetchone()
-    conn.close()
+#     supplier = conn.execute('SELECT * FROM SUPPLIERS WHERE supplier_id = ?', (supplier_id,)).fetchone()
+#     conn.close()
 
-    if supplier is None:
-        return jsonify({'error': 'Supplier not found'}), 404
-    return jsonify(dict(supplier))
-
-
-# Route to get all part_suppliers relationships
-@app.route('/part_suppliers', methods=['GET'])
-def get_all_part_suppliers():
-    """Fetches all records from the PART_SUPPLIERS table."""
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({'error': 'Failed to connect to database'}), 500
-
-    data = conn.execute('SELECT * FROM PART_SUPPLIERS').fetchall()
-    conn.close()
-    return jsonify([dict(row) for row in data])
-
-# Route to get part_suppliers relationships for a specific part_number
-# Example: http://127.0.0.1:5000/part_suppliers/XZL-1824-A or http://127.0.0.1:5000/part_suppliers/xzl-1824-a
-@app.route('/part_suppliers/<string:part_number>', methods=['GET'])
-def get_part_suppliers_by_part_number(part_number):
-    """Fetches all part-supplier relationships for a given part_number, case-insensitively."""
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({'error': 'Failed to connect to database'}), 500
-
-    # Convert part_number to uppercase for case-insensitive lookup
-    part_number_upper = part_number.upper()
-    sql = """
-        SELECT PS.*, S.supplier_name, S.geographical_location, S.certifications
-        FROM PART_SUPPLIERS PS
-        JOIN SUPPLIERS S ON PS.supplier_id = S.supplier_id
-        WHERE PS.part_number = ?
-    """
-    data = conn.execute(sql, (part_number_upper,)).fetchall()
-    conn.close()
-
-    if not data:
-        return jsonify({'error': 'No supplier relationships found for this part'}), 404
-    return jsonify([dict(row) for row in data])
+#     if supplier is None:
+#         return jsonify({'error': 'Supplier not found'}), 404
+#     return jsonify(dict(supplier))
 
 
-# Route to get all procurement_events
-@app.route('/procurement_events', methods=['GET'])
-def get_all_procurement_events():
-    """Fetches all records from the PROCUREMENT_EVENTS table."""
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({'error': 'Failed to connect to database'}), 500
+# # Route to get all part_suppliers relationships
+# @app.route('/part_suppliers', methods=['GET'])
+# def get_all_part_suppliers():
+#     """Fetches all records from the PART_SUPPLIERS table."""
+#     conn = get_db_connection()
+#     if conn is None:
+#         return jsonify({'error': 'Failed to connect to database'}), 500
 
-    data = conn.execute('SELECT * FROM PROCUREMENT_EVENTS').fetchall()
-    conn.close()
-    return jsonify([dict(row) for row in data])
+#     data = conn.execute('SELECT * FROM PART_SUPPLIERS').fetchall()
+#     conn.close()
+#     return jsonify([dict(row) for row in data])
 
-# Route to get a specific procurement_event by event_id
-# Example: http://127.0.0.1:5000/procurement_events/1
-@app.route('/procurement_events/<int:event_id>', methods=['GET'])
-def get_procurement_event_by_id(event_id):
-    """Fetches a single procurement event record by its event_id."""
-    conn = get_db_connection()
-    if conn is None:
-        return jsonify({'error': 'Failed to connect to database'}), 500
+# # Route to get part_suppliers relationships for a specific part_number
+# # Example: http://127.0.0.1:5000/part_suppliers/XZL-1824-A or http://127.0.0.1:5000/part_suppliers/xzl-1824-a
+# @app.route('/part_suppliers/<string:part_number>', methods=['GET'])
+# def get_part_suppliers_by_part_number(part_number):
+#     """Fetches all part-supplier relationships for a given part_number, case-insensitively."""
+#     conn = get_db_connection()
+#     if conn is None:
+#         return jsonify({'error': 'Failed to connect to database'}), 500
 
-    event = conn.execute('SELECT * FROM PROCUREMENT_EVENTS WHERE event_id = ?', (event_id,)).fetchone()
-    conn.close()
+#     # Convert part_number to uppercase for case-insensitive lookup
+#     part_number_upper = part_number.upper()
+#     sql = """
+#         SELECT PS.*, S.supplier_name, S.geographical_location, S.certifications
+#         FROM PART_SUPPLIERS PS
+#         JOIN SUPPLIERS S ON PS.supplier_id = S.supplier_id
+#         WHERE PS.part_number = ?
+#     """
+#     data = conn.execute(sql, (part_number_upper,)).fetchall()
+#     conn.close()
 
-    if event is None:
-        return jsonify({'error': 'Procurement event not found'}), 404
-    return jsonify(dict(event))
+#     if not data:
+#         return jsonify({'error': 'No supplier relationships found for this part'}), 404
+#     return jsonify([dict(row) for row in data])
+
+
+# # Route to get all procurement_events
+# @app.route('/procurement_events', methods=['GET'])
+# def get_all_procurement_events():
+#     """Fetches all records from the PROCUREMENT_EVENTS table."""
+#     conn = get_db_connection()
+#     if conn is None:
+#         return jsonify({'error': 'Failed to connect to database'}), 500
+
+#     data = conn.execute('SELECT * FROM PROCUREMENT_EVENTS').fetchall()
+#     conn.close()
+#     return jsonify([dict(row) for row in data])
+
+# # Route to get a specific procurement_event by event_id
+# # Example: http://127.0.0.1:5000/procurement_events/1
+# @app.route('/procurement_events/<int:event_id>', methods=['GET'])
+# def get_procurement_event_by_id(event_id):
+#     """Fetches a single procurement event record by its event_id."""
+#     conn = get_db_connection()
+#     if conn is None:
+#         return jsonify({'error': 'Failed to connect to database'}), 500
+
+#     event = conn.execute('SELECT * FROM PROCUREMENT_EVENTS WHERE event_id = ?', (event_id,)).fetchone()
+#     conn.close()
+
+#     if event is None:
+#         return jsonify({'error': 'Procurement event not found'}), 404
+#     return jsonify(dict(event))
 
 # Route to get all cdsids
 @app.route('/cdsids', methods=['GET'])
@@ -223,6 +223,7 @@ def execute_decoded_sql_query():
 # --- Run the application ---
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
 
 
 
