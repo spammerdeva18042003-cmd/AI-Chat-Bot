@@ -1,6 +1,12 @@
 from flask import Flask, jsonify,request
 import requests
 import os, sqlite3
+from urllib.parse import unquote
+
+# Initialize the Flask application.
+app = Flask(__name__)
+
+# ... (rest of your app.py code) ...
 
 # Initialize the Flask application.
 app = Flask(__name__)
@@ -223,6 +229,7 @@ def execute_decoded_sql_query():
 # --- Run the application ---
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
 
 
 
