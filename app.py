@@ -177,6 +177,40 @@ def get_cdsid_by_id(cdsid):
         return jsonify({'error': 'CDSID not found'}), 404
     return jsonify(dict(data))
 
+@app.route('/execute_sql', methods=['GET'])
+def execute_raw_sql_query():
+    """
+    Executes a raw SQL query provided as a URL query parameter.
+    Highly insecure and vulnerable to SQL Injection. Use only for local testing.
+    """
+    sql_query = request.args.get('query') # Get the 'query' parameter from the URL
+
+    if not sql_query:
+        return jsonify({'error': 'No SQL query provided in the "query" parameter.'}), 400
+
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({'error': 'Failed to connect to database'}), 500
+
+    try:
+        # !!! DANGER: Directly executing user-provided SQL !!!
+        cursor = conn.execute(sql_query)
+        # For SELECT queries, fetch results
+        if sql_query.strip().upper().startswith('SELECT'):
+            data = cursor.fetchall()
+            response_data = [dict(row) for row in data]
+        else:
+            # For non-SELECT queries (INSERT, UPDATE, DELETE, CREATE, DROP), commit changes
+            conn.commit()
+            response_data = {'message': 'SQL command executed successfully', 'rows_affected': cursor.rowcount}
+    except sqlite3.Error as e:
+        conn.rollback() # Rollback changes if an error occurs
+        return jsonify({'error': f'Database query error: {e}'}), 400
+    finally:
+        conn.close()
+
+    return jsonify(response_data)
 # --- Run the application ---
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
