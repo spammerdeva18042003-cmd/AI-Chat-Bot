@@ -1,4 +1,5 @@
-from flask import Flask, jsonify,requests
+from flask import Flask, jsonify,request
+import requests
 import os, sqlite3
 
 # Initialize the Flask application.
@@ -184,7 +185,7 @@ def execute_decoded_sql_query():
     Highly insecure and vulnerable to SQL Injection. Use only for local testing.
     """
     # 1. Get the encoded query string from the URL parameter
-    encoded_sql_query = requests.args.get('query')
+    encoded_sql_query = request.args.get('query')
 
     if not encoded_sql_query:
         return jsonify({'error': 'No SQL query provided in the "query" parameter.'}), 400
@@ -222,6 +223,7 @@ def execute_decoded_sql_query():
 # --- Run the application ---
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
 
 
 
