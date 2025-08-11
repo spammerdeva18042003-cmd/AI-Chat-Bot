@@ -214,7 +214,7 @@ def execute_decoded_sql_query():
         # 4. Fetch results if it's a SELECT query
         if sql_query.strip().upper().startswith('SELECT'):
             data = cursor.fetchall()
-            response_data = [dict(row) for row in data]
+            response_data = {'results': [dict(row) for row in data]}
         else:
             # For non-SELECT queries (INSERT, UPDATE, DELETE, CREATE, DROP), commit changes
             conn.commit()
@@ -229,6 +229,7 @@ def execute_decoded_sql_query():
 # --- Run the application ---
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
 
 
 
